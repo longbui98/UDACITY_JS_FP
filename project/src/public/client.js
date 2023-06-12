@@ -72,7 +72,7 @@ const ImageOfTheDay = (apod) => {
     console.log(photodate.getDate(), today.getDate());
 
     console.log(photodate.getDate() === today.getDate());
-    if (!apod || apod.date === today.getDate() ) {
+    if (!apod || apod.date === today.getDate()) {
         getImageOfTheDay(store)
     }
 
@@ -100,6 +100,20 @@ const getImageOfTheDay = (state) => {
     fetch(`http://localhost:3000/apod`)
         .then(res => res.json())
         .then(apod => updateStore(store, { apod }))
+        .catch(error => console.log(error));
 
     return data
+}
+
+
+const getImagesRover = async (roverName, state) => {
+    let { currentRover } = state;
+
+    currentRover = await fetch(`http://localhost:3000/rovers/${roverName}`)
+        .then(res => currentRover = res.json()).catch(error => console.log(error));
+
+    const newState = store.set('newCurrentRover', currentRover);
+
+    updateStore(store, newState);
+    return roverName;
 }
