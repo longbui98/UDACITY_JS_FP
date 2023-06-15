@@ -1,5 +1,5 @@
 let store = {
-    user: { name: "Student" },
+    user: { name: "Dev" },
     apod: '',
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
 }
@@ -19,28 +19,40 @@ const render = async (root, state) => {
 
 // create content
 const App = (state) => {
-    let { rovers, apod } = state
-
-    return `
-        <header></header>
-        <main>
-            ${Greeting(store.user.name)}
-            <section>
-                <h3>Put things on the page!</h3>
-                <p>Here is an example section.</p>
-                <p>
-                    One of the most popular websites at NASA is the Astronomy Picture of the Day. In fact, this website is one of
-                    the most popular websites across all federal agencies. It has the popular appeal of a Justin Bieber video.
-                    This endpoint structures the APOD imagery and associated metadata so that it can be repurposed for other
-                    applications. In addition, if the concept_tags parameter is set to True, then keywords derived from the image
-                    explanation are returned. These keywords could be used as auto-generated hashtags for twitter or instagram feeds;
-                    but generally help with discoverability of relevant imagery.
-                </p>
-                ${ImageOfTheDay(apod)}
-            </section>
-        </main>
-        <footer></footer>
-    `
+    if (state.get('newCurrentRover') === none) {
+        return (`
+            <header>
+            <div class="navbar-flex">
+                <div class="logo-flex" onclick="handleHome(event)">
+                    <a href="#"><img src="./assets/mars.png" alt="Mars icon"></a>
+                        <p>Mars</p>
+                </div>
+            </div>
+            </header>
+            <div class="container" style="background-image: url(${ImageOfTheDay(state)});">
+                <div class="wrapper-buttons">
+                    <h1 class="main-title">Discover Mars Rovers</h1>		
+                    <div class="button-container">${renderMenu(state)}</div>
+                </div>
+            </div>
+        `)
+    } else {
+        return (`
+        <header>
+            <div class="navbar-flex">
+                <div class="logo-flex" onclick="handleHome(event)">
+                   <a href="#"><img src="./assets/mars.png" alt="Mars icon"></a>
+                    <p>Mars</p>
+                 </div>
+                 <ul class="items-navbar">${renderMenuItems(state)}<ul>
+            </div>
+        </header>
+        <div class="container-info">
+            <h1 class="title">Discover everything to know about <span>${state.get('currentRover').latest_photos[0].rover.name}</span></h1>		
+            <div class="gallery">${renderImages(state)}</div>
+        </div>
+        `)
+    }
 }
 
 // listening for load event because page should load before any JS is called
@@ -49,19 +61,6 @@ window.addEventListener('load', () => {
 })
 
 // ------------------------------------------------------  COMPONENTS
-
-// Pure function that renders conditional information -- THIS IS JUST AN EXAMPLE, you can delete it.
-const Greeting = (name) => {
-    if (name) {
-        return `
-            <h1>Welcome, ${name}!</h1>
-        `
-    }
-
-    return `
-        <h1>Hello!</h1>
-    `
-}
 
 // Example of a pure function that renders infomation requested from the backend
 const ImageOfTheDay = (apod) => {
@@ -79,16 +78,72 @@ const ImageOfTheDay = (apod) => {
     // check if the photo of the day is actually type video!
     if (apod.media_type === "video") {
         return (`
-            <p>See today's featured video <a href="${apod.url}">here</a></p>
-            <p>${apod.title}</p>
-            <p>${apod.explanation}</p>
+                    < p > See today's featured video <a href="${apod.url}">here</a></>
+                        < p > ${apod.title}</ >
+                            <p>${apod.explanation}</p>
         `)
     } else {
         return (`
-            <img src="${apod.image.url}" height="350px" width="100%" />
-            <p>${apod.image.explanation}</p>
+            < img src = "${apod.image.url}" height = "350px" width = "100%" />
+                <p>${apod.image.explanation}</p>
         `)
     }
+}
+
+const renderMenu = (state) => {
+    return `<ul class="flex">${renderButtonState(state)}</ul>`
+}
+
+const renderButtonState = (state) => {
+    return Array.from(state.get('rovers')).map(item =>
+        `<li id=${item} class="flex-item btn" onclick="handleClick(event)">
+            <a ref="#"  class=""  >${capitalize(`${item}`)}</a>
+        </li>`
+    ).join("")
+}
+
+
+const renderMenuItems = (state) => {
+    return Array.from(state.get('rovers')).map(item =>
+        `<li id=${item} class="" onclick="handleClick(event)">
+            <a ref="#"  class=""  >${capitalize(`${item}`)}</a>
+        </li>`
+    ).join("")
+}
+
+const capitalize = (value) => {
+    //Capitalize only first character of word
+    return `${value[0].toUpperCase()}${word.slice(1)}`;
+}
+
+const renderImages = (state) => {
+    const detailsInformation = state.get('newCurrentRover');
+
+    return Array.from(base.latest_photos).map(value =>
+        `<div class="wrapper">
+            <img class="${item.img_src}/>
+            <p><span>Image date:</span> ${item.earth_date}</p>
+            <p><span>Rover:</span> ${item.rover.name}</p>
+            <p><span>State of the rover:</span> ${item.rover.status}</p>
+            <p><span>Launch date:</span> ${item.rover.launch_date}</p>
+            <p><span>Landing date:</span> ${item.rover.landing_date}</p>
+        </div>`)
+}
+
+const handleClick = event => {
+    const { id } = event.currentTarget;
+
+    if (Array.from(store.get('rovers')).includes(id)) {
+        getRoverImages(id, store);
+    }
+    else {
+        console.log('The id is not include. Please check');
+    }
+}
+
+const handleHome = event => {
+    const newState = store.set('newCurrentRover', 'none');
+    updateStore(store, newState);
 }
 
 // ------------------------------------------------------  API CALLS
